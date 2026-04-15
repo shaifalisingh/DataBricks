@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NutriAI — Your AI-Powered Fitness & Meal Planner</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:    #22c55e;
+      --green-dk: #16a34a;
+      --dark:     #000000;
+      --card:     #111111;
+      --muted:    #666666;
+      --text:     #f0f0f0;
+      --border:   #222222;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(0, 0, 0, 0.90);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { font-size: 1.25rem; font-weight: 700; color: var(--green); letter-spacing: -0.5px; }
+    .logo span { color: var(--text); }
+    nav ul { list-style: none; display: flex; gap: 2rem; }
+    nav ul a { text-decoration: none; color: var(--muted); font-size: 0.9rem; transition: color .2s; }
+    nav ul a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--green); color: #fff; border: none; border-radius: 8px;
+      padding: 0.5rem 1.25rem; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    .nav-cta:hover { background: var(--green-dk); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 8rem 1.5rem 4rem;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(34,197,94,.12) 0%, transparent 70%);
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3);
+      color: var(--green); border-radius: 999px;
+      padding: 0.35rem 1rem; font-size: 0.8rem; font-weight: 600;
+      margin-bottom: 1.5rem; letter-spacing: .4px;
+    }
+    .badge-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 1.8s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      font-weight: 800; line-height: 1.1;
+      letter-spacing: -1.5px; margin-bottom: 1.25rem;
+    }
+    h1 .accent { color: var(--green); }
+
+    .hero-sub {
+      max-width: 560px; color: var(--muted); font-size: 1.1rem; margin-bottom: 2.5rem;
+    }
+
+    .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: var(--green); color: #fff; border: none; border-radius: 10px;
+      padding: 0.85rem 2rem; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: background .2s, transform .15s;
+    }
+    .btn-primary:hover { background: var(--green-dk); transform: translateY(-1px); }
+    .btn-secondary {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.85rem 2rem; font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: border-color .2s, transform .15s;
+    }
+    .btn-secondary:hover { border-color: var(--green); transform: translateY(-1px); }
+
+    .hero-note { margin-top: 1rem; font-size: 0.8rem; color: var(--muted); }
+
+    /* ── CHAT MOCKUP ── */
+    .chat-preview {
+      margin-top: 4rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%; max-width: 520px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,.5);
+    }
+    .chat-header {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .chat-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), #3b82f6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700; color: #fff;
+    }
+    .chat-name { font-size: 0.9rem; font-weight: 600; }
+    .chat-status { font-size: 0.75rem; color: var(--green); }
+    .chat-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.85rem; }
+
+    .msg { display: flex; gap: 0.6rem; align-items: flex-end; max-width: 88%; }
+    .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+    .bubble {
+      padding: 0.6rem 0.9rem; border-radius: 14px;
+      font-size: 0.875rem; line-height: 1.5;
+    }
+    .msg.ai .bubble   { background: rgba(255,255,255,.07); border-bottom-left-radius: 4px; }
+    .msg.user .bubble { background: var(--green); color: #fff; border-bottom-right-radius: 4px; }
+    .msg-avatar {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--green), #3b82f6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 700; color: #fff;
+    }
+    .msg.user .msg-avatar { background: var(--muted); }
+
+    /* ── LOGOS / SOCIAL PROOF ── */
+    .social-proof {
+      text-align: center; padding: 3rem 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .social-proof p { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2rem; }
+    .stats { display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: var(--green); }
+    .stat-label { font-size: 0.8rem; color: var(--muted); }
+
+    /* ── FEATURES ── */
+    section { padding: 5rem 1.5rem; max-width: 1080px; margin: 0 auto; }
+    .section-label { color: var(--green); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.75rem; }
+    .section-title { font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 800; letter-spacing: -0.5px; margin-bottom: 1rem; }
+    .section-sub { color: var(--muted); max-width: 520px; font-size: 1rem; margin-bottom: 3rem; }
+
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+    .feature-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.75rem;
+      transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover { border-color: var(--green); transform: translateY(-3px); }
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1rem;
+    }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .feature-card p { font-size: 0.875rem; color: var(--muted); }
+
+    /* ── HOW IT WORKS ── */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2rem; }
+    .step { text-align: center; }
+    .step-num {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: rgba(34,197,94,.1); border: 2px solid var(--green);
+      color: var(--green); font-size: 1.1rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    .step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .step p { font-size: 0.875rem; color: var(--muted); }
+
+    /* ── CTA BAND ── */
+    .cta-band {
+      background: linear-gradient(135deg, rgba(34,197,94,.15), rgba(59,130,246,.1));
+      border: 1px solid rgba(34,197,94,.25);
+      border-radius: 20px;
+      padding: 4rem 2rem; text-align: center;
+      margin: 0 1.5rem 5rem;
+    }
+    .cta-band h2 { font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 0.75rem; }
+    .cta-band p { color: var(--muted); margin-bottom: 2rem; max-width: 480px; margin-left: auto; margin-right: auto; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+      color: var(--muted); font-size: 0.8rem; max-width: 1080px; margin: 0 auto;
+    }
+    footer .logo { font-size: 1rem; }
+
+    @media (max-width: 640px) {
+      nav ul { display: none; }
+      .stats { gap: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">Nutri<span>AI</span></div>
+    <ul>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#cta">Pricing</a></li>
+    </ul>
+    <button class="nav-cta">Get early access</button>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="badge"><span class="badge-dot"></span> AI-Powered Nutrition Intelligence</div>
+    <h1>Your personal<br><span class="accent">AI nutrition coach</span><br>always on call</h1>
+    <p class="hero-sub">
+      Chat with an AI that knows your goals, tracks your meals,
+      and builds meal plans designed around you — not a generic template.
+    </p>
+    <div class="hero-btns">
+      <button class="btn-primary">Start for free</button>
+      <button class="btn-secondary">See how it works</button>
+    </div>
+    <p class="hero-note">No credit card required &nbsp;·&nbsp; 14-day free trial</p>
+
+    <!-- Chat mockup -->
+    <div class="chat-preview">
+      <div class="chat-header">
+        <div class="chat-avatar">N</div>
+        <div>
+          <div class="chat-name">NutriAI Coach</div>
+          <div class="chat-status">● Online</div>
+        </div>
+      </div>
+      <div class="chat-body">
+        <div class="msg user">
+          <div class="msg-avatar">U</div>
+          <div class="bubble">I want to lose 8kg in 3 months. I'm vegetarian and hate cooking elaborate meals.</div>
+        </div>
+        <div class="msg ai">
+          <div class="msg-avatar">N</div>
+          <div class="bubble">
+            Got it! Based on your goal, I'll target a 500 kcal daily deficit — roughly 1,650 kcal/day for you.<br><br>
+            I'll keep meals under 20 minutes. Starting with a week-1 plan: high-protein breakfasts, simple dal-rice combos, and Greek yogurt snacks. Want me to generate your full Week 1 meal plan?
+          </div>
+        </div>
+        <div class="msg user">
+          <div class="msg-avatar">U</div>
+          <div class="bubble">Yes, and can you factor in that I work out 3x a week?</div>
+        </div>
+        <div class="msg ai">
+          <div class="msg-avatar">N</div>
+          <div class="bubble">
+            Absolutely — I'll add 150–200 kcal on workout days and front-load carbs before your sessions. Generating your personalised plan now...
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOCIAL PROOF -->
+  <div class="social-proof">
+    <p>Trusted by early users in beta</p>
+    <div class="stats">
+      <div>
+        <div class="stat-num">2,400+</div>
+        <div class="stat-label">Waitlist signups</div>
+      </div>
+      <div>
+        <div class="stat-num">94%</div>
+        <div class="stat-label">Said plans felt personalised</div>
+      </div>
+      <div>
+        <div class="stat-num">3.2kg</div>
+        <div class="stat-label">Avg. loss in first month</div>
+      </div>
+      <div>
+        <div class="stat-num">7 min</div>
+        <div class="stat-label">Avg. daily logging time</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">Everything a dietitian does,<br>at 1/10th the cost</h2>
+    <p class="section-sub">No more generic meal plans. NutriAI adapts in real time to what you actually eat, how you feel, and how close you are to your goal.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>Conversational AI Coach</h3>
+        <p>Ask anything — swap an ingredient, explain a craving, adjust for a dinner out. Get an instant, contextual answer.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🥗</div>
+        <h3>Dynamic Meal Planning</h3>
+        <p>Weekly plans built around your dietary preferences, allergies, schedule, and calorie targets — regenerated whenever life changes.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Smart Food Logging</h3>
+        <p>Log meals by photo, voice, or barcode. AI fills in the gaps so logging takes seconds, not minutes.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏋️</div>
+        <h3>Workout-Aware Nutrition</h3>
+        <p>Sync your training schedule and NutriAI adjusts calories, carb timing, and protein targets on the fly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3>Progress Intelligence</h3>
+        <p>See patterns the scale can't show — sleep quality, energy levels, and nutrition gaps that might be slowing you down.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <h3>Nudges, Not Nagging</h3>
+        <p>Context-aware reminders that feel helpful, not robotic. Skipped lunch? We'll suggest a quick snack to keep you on track.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">Up and running in under 3 minutes</h2>
+    <p class="section-sub">No lengthy onboarding forms. Just a conversation.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Tell us your goal</h3>
+        <p>Weight loss, muscle gain, better energy — chat with the AI like you'd text a friend. It figures out the rest.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Get your first meal plan</h3>
+        <p>A personalised week-one plan is generated in seconds, built around your food preferences and lifestyle.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Log and refine</h3>
+        <p>Log meals quickly. The AI learns your patterns and adjusts recommendations every week based on real data.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Hit your goal</h3>
+        <p>Track progress, celebrate wins, and let the AI set the next challenge once you've nailed the first one.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BAND -->
+  <div class="cta-band" id="cta">
+    <h2>Stop guessing.<br>Start eating with intention.</h2>
+    <p>Join 2,400+ people on the waitlist. Early access users lock in founding member pricing forever.</p>
+    <button class="btn-primary" style="font-size:1.05rem; padding: 1rem 2.5rem;">
+      Get early access — it's free
+    </button>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="logo">Nutri<span style="color:var(--text)">AI</span></div>
+    <div>© 2026 NutriAI. All rights reserved.</div>
+    <div style="display:flex; gap:1.5rem;">
+      <a href="#" style="color:var(--muted); text-decoration:none;">Privacy</a>
+      <a href="#" style="color:var(--muted); text-decoration:none;">Terms</a>
+      <a href="#" style="color:var(--muted); text-decoration:none;">Contact</a>
+    </div>
+  </footer>
+
+</body>
+</html>
